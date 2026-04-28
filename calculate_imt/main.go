@@ -1,21 +1,30 @@
 package main
-
 import (
+	"errors"
 	"fmt"
 	"math"
+
 )
 
 const IMT_POWER = 2
 
 func main() {
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Println("Recover", r)
+		}
+	}()
+
 	println("__ Калькулятор индекса массы тела")
 	for {
 		userWeight, userHeight := getUserInput()
-		if userHeight == 0 || userWeight == 0 {
-			fmt.Println("Выход из программы")
-			break
+		imt, err := calculateIMT(userWeight, userHeight)
+		if err != nil {
+			// fmt.Println(err, "- Некорректные параметры для расчета")
+			// continue
+			panic("Некорректные параметры для расчета")
 		}
-		imt := calculateIMT(userWeight, userHeight)
 		outputResult(imt)
 		if !checkRepeatCalculation() {
 			break
@@ -41,8 +50,12 @@ func outputResult(_imt float64) {
 	}
 }
 
-func calculateIMT(_weight float64, _height float64) float64 {
-	return float64(_weight) / math.Pow(_height/100, IMT_POWER)
+func calculateIMT(weight float64, height float64) (float64, error) {
+	if weight <= 0 || height <= 0 {
+		return 0, errors.New("PARAMS_ERROR")
+	}
+	imt := float64(weight) / math.Pow(height/100, IMT_POWER)
+	return imt, nil
 }
 
 func getUserInput() (float64, float64) {
@@ -60,7 +73,7 @@ func checkRepeatCalculation() bool {
 	fmt.Println("\nХотите повторить расчет? (y/n)")
 	var input string
 	fmt.Scan(&input)
-	if input == "y" || input == "Y"{
+	if input == "y" || input == "Y" {
 		return true
 	}
 	return false
