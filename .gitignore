@@ -37,3 +37,4 @@ vendor/
 .env
 .env.local
 password/password
+*.json

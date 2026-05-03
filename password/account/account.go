@@ -1,28 +1,26 @@
 package account
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand/v2"
 	"net/url"
 	"time"
+
 	"github.com/fatih/color"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+~`")
 
-type account struct {
-	login    string
-	password string
-	url      string
+type Account struct {
+	Login     string    `json:"login"`
+	Password  string    `json:"password"`
+	Url       string    `json:"url"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type AccountWithTimeStamp struct {
-	createdAt time.Time
-	updatedAt time.Time
-	account
-}
-
-func newAccount(login, pasword, urlString string) (*account, error) {
+func NewAccount(login, pasword, urlString string) (*Account, error) {
 	if login == "" {
 		return nil, fmt.Errorf("логин не может быть пустым")
 	}
@@ -30,44 +28,36 @@ func newAccount(login, pasword, urlString string) (*account, error) {
 	if err != nil {
 		return nil, fmt.Errorf("некорректный URL: %w", err)
 	}
-	acc := account{
-		login:    login,
-		password: pasword,
-		url:      urlString,
+	acc := Account{
+		Login:     login,
+		Password:  pasword,
+		Url:       urlString,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
-	if acc.password == "" {
+	if acc.Password == "" {
 		acc.generatePassword(10)
 	}
 	return &acc, nil
 }
 
-func NewAccountWithTimeStamp(login, pasword, urlString string) (*AccountWithTimeStamp, error) {
-	acc, err := newAccount(login, pasword, urlString)
-	if err != nil {
-		return nil, err
-	}
-
-	accWithTimeStamp := AccountWithTimeStamp{
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
-		account:   *acc,
-	}
-
-	if accWithTimeStamp.password == "" {
-		accWithTimeStamp.generatePassword(10)
-	}
-	return &accWithTimeStamp, nil
-}
-
-func (acc *AccountWithTimeStamp) OutputPassword() {
-	color.Cyan("%s %s %s", acc.login, acc.password, acc.url)
+func (acc *Account) OutputPassword() {
+	color.Cyan("%s %s %s", acc.Login, acc.Password, acc.Url)
 	fmt.Println(acc)
 }
 
-func (acc *account) generatePassword(lenght int) {
+func (acc *Account) ToBytes() ([]byte, error){
+	file, err := json.Marshal(acc)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
+func (acc *Account) generatePassword(lenght int) {
 	pass := make([]rune, lenght)
 	for i := range lenght {
 		pass[i] = letterRunes[rand.IntN(len(letterRunes))]
 	}
-	acc.password = string(pass)
+	acc.Password = string(pass)
 }
