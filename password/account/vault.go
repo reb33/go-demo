@@ -1,7 +1,6 @@
 package account
 
 import (
-	"demo/password/files"
 	"encoding/json"
 	"strings"
 	"time"
@@ -9,43 +8,62 @@ import (
 	"github.com/fatih/color"
 )
 
+type Db interface{
+	Read() ([]byte, error)
+	Write([]byte)
+}
+
 type Vault struct {
 	Accounts  []*Account `json:"accounts"`
 	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
-func NewVault() *Vault {
-	data, err := files.ReadFile("account.json")
+type VaultWithDB struct {
+	Vault
+	db Db
+}
+
+func NewVault(db Db) *VaultWithDB {
+	data, err := db.Read()
 	if err != nil {
-		return &Vault{
-			Accounts:  []*Account{},
-			UpdatedAt: time.Now(),
+		return &VaultWithDB{
+			Vault: Vault{
+				Accounts:  []*Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
 		}
 	}
 	var vault Vault
 	err = json.Unmarshal(data, &vault)
 	if err != nil {
 		color.Red("Ошибка при чтении файла: %v", err)
-		return &Vault{
-			Accounts:  []*Account{},
-			UpdatedAt: time.Now(),
+		return &VaultWithDB{
+			Vault: Vault{
+				Accounts:  []*Account{},
+				UpdatedAt: time.Now(),
+			},
+			db: db,
 		}
 	}
-	return &vault
+	return &VaultWithDB{
+		Vault: vault,
+		db:    db,
+	}
 }
 
-func (vault *Vault) AddAccount(account *Account) {
+func (vault *VaultWithDB) AddAccount(account *Account) {
 	vault.Accounts = append(vault.Accounts, account)
 	vault.WriteToFile()
 }
 
-func (vault *Vault) WriteToFile() {
+func (vault *VaultWithDB) WriteToFile() {
 	vault.UpdatedAt = time.Now()
-	data, err := json.Marshal(vault)
+	data, err := vault.Vault.ToBytes()
 	if err != nil {
 		color.Red("Ошибка при записи файла: %v", err)
 	}
-	files.WriteFile(data, "account.json")
+	vault.db.Write(data)
 }
 
 func (vault *Vault) ToBytes() ([]byte, error) {
@@ -56,7 +74,7 @@ func (vault *Vault) ToBytes() ([]byte, error) {
 	return file, nil
 }
 
-func (vault *Vault) FindAccounts(url string) []*Account {
+func (vault *VaultWithDB) FindAccounts(url string) []*Account {
 	var accounts []*Account
 	for _, acc := range vault.Accounts {
 		if strings.Contains(acc.Url, url) {
@@ -66,7 +84,7 @@ func (vault *Vault) FindAccounts(url string) []*Account {
 	return accounts
 }
 
-func (vault *Vault) FindAccountWithPosition(url string) (*Account, int) {
+func (vault *VaultWithDB) FindAccountWithPosition(url string) (*Account, int) {
 	for i, acc := range vault.Accounts {
 		if strings.Contains(acc.Url, url) {
 			return acc, i
@@ -75,7 +93,7 @@ func (vault *Vault) FindAccountWithPosition(url string) (*Account, int) {
 	return nil, -1
 }
 
-func (vault *Vault) DelAccount(url string) *Account{
+func (vault *VaultWithDB) DelAccount(url string) *Account {
 	acc, pos := vault.FindAccountWithPosition(url)
 	if acc == nil {
 		return nil
