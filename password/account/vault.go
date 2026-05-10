@@ -1,16 +1,23 @@
 package account
 
 import (
+	"demo/password/output"
 	"encoding/json"
 	"strings"
 	"time"
-
-	"github.com/fatih/color"
 )
 
-type Db interface{
+type ByteReader interface {
 	Read() ([]byte, error)
+}
+
+type ByteWriter interface {
 	Write([]byte)
+}
+
+type Db interface {
+	ByteReader
+	ByteWriter
 }
 
 type Vault struct {
@@ -37,7 +44,8 @@ func NewVault(db Db) *VaultWithDB {
 	var vault Vault
 	err = json.Unmarshal(data, &vault)
 	if err != nil {
-		color.Red("Ошибка при чтении файла: %v", err)
+		// color.Red("Ошибка при чтении файла: %v", err)
+		output.PrintError("Ошибка при чтении файла: " + err.Error())
 		return &VaultWithDB{
 			Vault: Vault{
 				Accounts:  []*Account{},
@@ -61,7 +69,8 @@ func (vault *VaultWithDB) WriteToFile() {
 	vault.UpdatedAt = time.Now()
 	data, err := vault.Vault.ToBytes()
 	if err != nil {
-		color.Red("Ошибка при записи файла: %v", err)
+		// color.Red("Ошибка при записи файла: %v", err)
+		output.PrintError("Ошибка при записи файла: " + err.Error())
 	}
 	vault.db.Write(data)
 }
