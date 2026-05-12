@@ -5,17 +5,17 @@ import (
 	"os"
 )
 
-type JsonDB struct {
+type FileDB struct {
 	filename string
 }
 
-func NewJsonDB(name string) *JsonDB {
-	return &JsonDB{
+func NewFileDB(name string) *FileDB {
+	return &FileDB{
 		filename: name,
 	}
 }
 
-func (db *JsonDB) Read() ([]byte, error) {
+func (db *FileDB) Read() ([]byte, error) {
 	data, err := os.ReadFile(db.filename)
 	if err != nil {
 		return nil, err
@@ -23,13 +23,13 @@ func (db *JsonDB) Read() ([]byte, error) {
 	return data, nil
 }
 
-func (db *JsonDB) Write(content []byte) {
+func (db *FileDB) Write(content []byte) {
 	file, err := os.Create(db.filename)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer file.Close()
-	_, err =file.Write(content)
+	_, err = file.Write(content)
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -2,7 +2,10 @@ module demo/password
 
 go 1.26.2
 
-require github.com/fatih/color v1.19.0
+require (
+	github.com/fatih/color v1.19.0
+	github.com/joho/godotenv v1.5.1
+)
 
 require (
 	github.com/mattn/go-colorable v0.1.14 // indirect

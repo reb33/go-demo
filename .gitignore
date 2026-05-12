@@ -38,3 +38,6 @@ vendor/
 .env.local
 password/password
 *.json
+vault.txt
+
+.vscode

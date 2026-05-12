@@ -1,10 +1,12 @@
 package account
 
 import (
+	"demo/password/encrypter"
 	"demo/password/output"
-	"encoding/json"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 type ByteReader interface {
@@ -20,6 +22,13 @@ type Db interface {
 	ByteWriter
 }
 
+type Format interface {
+	ToBytes(*Vault) ([]byte, error)
+	FromBytes([]byte) (*Vault, error)
+}
+
+
+
 type Vault struct {
 	Accounts  []*Account `json:"accounts"`
 	UpdatedAt time.Time  `json:"updatedAt"`
@@ -28,10 +37,12 @@ type Vault struct {
 type VaultWithDB struct {
 	Vault
 	db Db
+	Format
+	enc *encrypter.Encrypter
 }
 
-func NewVault(db Db) *VaultWithDB {
-	data, err := db.Read()
+func NewVault(db Db, format Format, enc *encrypter.Encrypter) *VaultWithDB {
+	encryptedData, err := db.Read()
 	if err != nil {
 		return &VaultWithDB{
 			Vault: Vault{
@@ -39,10 +50,13 @@ func NewVault(db Db) *VaultWithDB {
 				UpdatedAt: time.Now(),
 			},
 			db: db,
+			Format: format,
+			enc: enc,
 		}
 	}
-	var vault Vault
-	err = json.Unmarshal(data, &vault)
+	data := enc.Decrypt(encryptedData)
+	vault, err := format.FromBytes(data)
+	color.Cyan("Найдено %d аккаунтов", len(vault.Accounts))
 	if err != nil {
 		// color.Red("Ошибка при чтении файла: %v", err)
 		output.PrintError("Ошибка при чтении файла: " + err.Error())
@@ -52,11 +66,15 @@ func NewVault(db Db) *VaultWithDB {
 				UpdatedAt: time.Now(),
 			},
 			db: db,
+			Format: format,
+			enc: enc,
 		}
 	}
 	return &VaultWithDB{
-		Vault: vault,
+		Vault: *vault,
 		db:    db,
+		Format: format,
+		enc: enc,
 	}
 }
 
@@ -67,26 +85,27 @@ func (vault *VaultWithDB) AddAccount(account *Account) {
 
 func (vault *VaultWithDB) WriteToFile() {
 	vault.UpdatedAt = time.Now()
-	data, err := vault.Vault.ToBytes()
+	data, err := vault.Format.ToBytes(&vault.Vault)
 	if err != nil {
 		// color.Red("Ошибка при записи файла: %v", err)
-		output.PrintError("Ошибка при записи файла: " + err.Error())
+		output.PrintError("Ошибка форматирования данных: " + err.Error())
 	}
-	vault.db.Write(data)
+	encryptedData := vault.enc.Encrypt(data)
+	vault.db.Write(encryptedData)
 }
 
-func (vault *Vault) ToBytes() ([]byte, error) {
-	file, err := json.Marshal(vault)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
-}
+// func (vault *Vault) ToBytes() ([]byte, error) {
+// 	file, err := json.Marshal(vault)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return file, nil
+// }
 
-func (vault *VaultWithDB) FindAccounts(url string) []*Account {
+func (vault *VaultWithDB) FindAccounts(str string, checker func(*Account, string) bool) []*Account {
 	var accounts []*Account
 	for _, acc := range vault.Accounts {
-		if strings.Contains(acc.Url, url) {
+		if checker(acc, str) {
 			accounts = append(accounts, acc)
 		}
 	}
