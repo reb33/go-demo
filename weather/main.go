@@ -21,6 +21,9 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(geoData)
-	weatherData := weather.GetWeather(*geoData, *format)
+	weatherData, err := weather.GetWeather(*geoData, *format)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(weatherData)
 }
