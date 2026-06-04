@@ -7,10 +7,12 @@ import (
 	"adv_demo/configs"
 	"adv_demo/internal/auth"
 	"adv_demo/internal/hello"
+	"adv_demo/pkg/db"
 )
 
 func main() {
 	conf := configs.LoadConfig()
+	_ = db.NewDb(conf)
 	router := http.NewServeMux()
 	hello.NewHelloHandler(router)
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
