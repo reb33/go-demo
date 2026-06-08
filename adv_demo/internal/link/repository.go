@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type LinkRepository struct {
@@ -48,4 +49,23 @@ func (repo *LinkRepository) IsHashExist(hash string) (bool, error) {
 		return false, result.Error
 	}
 	return result.RowsAffected>0, nil
+}
+
+type UpdateLinkParams struct {
+	ID   uint64
+	Url  string
+	Hash string
+}
+
+func (repo *LinkRepository) Update(params *UpdateLinkParams) (*Link, error) {
+	link := &Link{
+			Model: gorm.Model{ID: uint(params.ID)},
+			Url:   params.Url,
+			Hash:  params.Hash,
+		}
+	result := repo.Database.Clauses(clause.Returning{}).Updates(link)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return link, nil
 }

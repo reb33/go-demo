@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type LinkHandlerDeps struct {
@@ -70,9 +71,28 @@ func (handler *LinkHandler) CreateLink() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *LinkHandler) UpdateLink() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) UpdateLink() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("UpdateLink"))
+		body, err := request.HandleBody[LinkUpdateRequest](&w, r)
+		if err != nil {
+			return
+		}
+		idStr := r.PathValue("id")
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		link, err := handler.LinkRepository.Update(&UpdateLinkParams{
+			ID:   id,
+			Url:  body.Url,
+			Hash: body.Hash,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		response.Json(w, http.StatusOK, link)
 	}
 }
 
