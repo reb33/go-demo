@@ -48,7 +48,19 @@ func (handler *LinkHandler) CreateLink() func(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			return
 		}
-		link := NewLink(body.Url)
+		var link = NewLink(body.Url)
+		for {
+			isExist, err := handler.LinkRepository.IsHashExist(link.Hash)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if !isExist {
+				break
+			}
+			link.GenerateHash()
+		}
+
 		createdLink, err := handler.LinkRepository.Create(link)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

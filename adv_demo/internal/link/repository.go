@@ -40,3 +40,12 @@ func (repo *LinkRepository) GetByHash(hash string) (*Link, error) {
 	}
 	return &link, nil
 }
+
+func (repo *LinkRepository) IsHashExist(hash string) (bool, error) {
+	var link Link
+	result := repo.Database.Limit(1).Find(&link, "hash = ?", hash)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected>0, nil
+}
