@@ -44,3 +44,15 @@ func TestRepositoryCheckHashNotFound(t *testing.T) {
 		t.Error("hash должен быть не найден")
 	}
 }
+
+func TestRepositoryCheckGetById(t *testing.T) {
+	link, err := repo.Create(link.NewLink("http://test.ru"))
+	link, err = repo.GetById(link.ID)
+	if err != nil {
+		t.Error(err)	
+	}
+	if link == nil {
+		t.Error("должна вернуться ссылка")
+	}
+	repo.Delete(link.ID)
+}

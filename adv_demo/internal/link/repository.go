@@ -3,6 +3,7 @@ package link
 import (
 	"adv_demo/pkg/db"
 	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -48,7 +49,16 @@ func (repo *LinkRepository) IsHashExist(hash string) (bool, error) {
 	if result.Error != nil {
 		return false, result.Error
 	}
-	return result.RowsAffected>0, nil
+	return result.RowsAffected > 0, nil
+}
+
+func (repo *LinkRepository) GetById(id uint) (*Link, error) {
+	var link Link
+	result := repo.Database.Limit(1).Find(&link, "id = ?", id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &link, nil
 }
 
 type UpdateLinkParams struct {
@@ -59,13 +69,23 @@ type UpdateLinkParams struct {
 
 func (repo *LinkRepository) Update(params *UpdateLinkParams) (*Link, error) {
 	link := &Link{
-			Model: gorm.Model{ID: uint(params.ID)},
-			Url:   params.Url,
-			Hash:  params.Hash,
-		}
+		Model: gorm.Model{ID: uint(params.ID)},
+		Url:   params.Url,
+		Hash:  params.Hash,
+	}
 	result := repo.Database.Clauses(clause.Returning{}).Updates(link)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return link, nil
+}
+
+func (repo *LinkRepository) Delete(id uint) (*Link, bool, error) {
+	var link Link
+	result := repo.Database.Clauses(clause.Returning{}).Delete(&link, id)
+	if result.Error != nil {
+		return nil, false, result.Error
+	}
+	fmt.Println(result.RowsAffected)
+	return &link, result.RowsAffected>0, nil
 }

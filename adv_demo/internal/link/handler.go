@@ -4,7 +4,6 @@ import (
 	"adv_demo/pkg/request"
 	"adv_demo/pkg/response"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -96,9 +95,23 @@ func (handler *LinkHandler) UpdateLink() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *LinkHandler) DeleteLink() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) DeleteLink() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
-		fmt.Println(id)
+		idStr := r.PathValue("id")
+		id, err := strconv.ParseUint(idStr, 10, 32)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		link, isDeleted, err := handler.LinkRepository.Delete(uint(id))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !isDeleted {
+			http.Error(w, "Link not found", http.StatusNotFound)
+			return
+		}
+		response.Json(w, http.StatusOK, link)
 	}
 }
