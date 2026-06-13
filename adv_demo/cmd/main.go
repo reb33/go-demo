@@ -8,6 +8,7 @@ import (
 	"adv_demo/internal/auth"
 	"adv_demo/internal/link"
 	"adv_demo/pkg/db"
+	"adv_demo/pkg/middleware"
 )
 
 func main() {
@@ -26,9 +27,16 @@ func main() {
 		LinkRepository: linkRepository,
 	})
 
+	// Middlewares
+	stack := middleware.Chain(
+		middleware.CORS, 
+		middleware.Logging,
+		middleware.IsAuthed,
+	)
+
 	server := http.Server{
 		Addr:    ":8081",
-		Handler: router,
+		Handler: stack(router),
 	}
 
 	fmt.Println("Server is listening on port 8081")
