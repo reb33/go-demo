@@ -1,6 +1,7 @@
 package link
 
 import (
+	"adv_demo/pkg/middleware"
 	"adv_demo/pkg/request"
 	"adv_demo/pkg/response"
 	"errors"
@@ -22,11 +23,11 @@ func NewLinkHandler(router *http.ServeMux, deps *LinkHandlerDeps) {
 	}
 	router.HandleFunc("GET /{hash}", handler.GoTo())
 	router.HandleFunc("POST /link", handler.CreateLink())
-	router.HandleFunc("PATCH /link/{id}", handler.UpdateLink())
+	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.UpdateLink()))
 	router.HandleFunc("DELETE /link/{id}", handler.DeleteLink())
 }
 
-func (handler *LinkHandler) GoTo() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) GoTo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hash := r.PathValue("hash")
 		link, err := handler.LinkRepository.GetByHash(hash)
@@ -42,7 +43,7 @@ func (handler *LinkHandler) GoTo() func(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (handler *LinkHandler) CreateLink() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) CreateLink() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[LinkCreateRequest](&w, r)
 		if err != nil {
@@ -70,7 +71,7 @@ func (handler *LinkHandler) CreateLink() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (handler *LinkHandler) UpdateLink() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) UpdateLink() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := request.HandleBody[LinkUpdateRequest](&w, r)
 		if err != nil {
@@ -95,7 +96,7 @@ func (handler *LinkHandler) UpdateLink() func(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (handler *LinkHandler) DeleteLink() func(w http.ResponseWriter, r *http.Request) {
+func (handler *LinkHandler) DeleteLink() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		id, err := strconv.ParseUint(idStr, 10, 32)
