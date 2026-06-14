@@ -4,7 +4,6 @@ import (
 	"adv_demo/configs"
 	"adv_demo/pkg/request"
 	"adv_demo/pkg/response"
-	"fmt"
 	"net/http"
 )
 
@@ -20,7 +19,7 @@ type AuthHandler struct {
 
 func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	handler := &AuthHandler{
-		Config: deps.Config,
+		Config:      deps.Config,
 		AuthService: deps.AuthService,
 	}
 	router.HandleFunc("POST /auth/login", handler.Login())
@@ -33,13 +32,13 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		fmt.Println(payload)
-
-		secret := handler.Config.Auth.Secret
-		res := LoginResponse{
-			Token: secret,
+		_, err = handler.AuthService.Login(payload.Email, payload.Password)
+		if err != nil {
+			response.Json(w, http.StatusBadRequest, ErrResponse{Error: err.Error()})
+			return
 		}
-		response.Json(w, http.StatusOK, res)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
@@ -49,13 +48,12 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		handler.AuthService.Register(payload.Email, payload.Password, payload.Name)
-
-		secret := handler.Config.Auth.Secret
-		res := RegisterResponse{
-			Status: "success",
-			Token:  secret,
+		_, err = handler.AuthService.Register(payload.Email, payload.Password, payload.Name)
+		if err != nil {
+			response.Json(w, http.StatusBadRequest, ErrResponse{Error: err.Error()})
+			return
 		}
-		response.Json(w, http.StatusOK, res)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }

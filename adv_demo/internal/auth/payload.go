@@ -17,5 +17,8 @@ type LoginResponse struct {
 
 type RegisterResponse struct {
 	Status string `json:"status"`
-	Token string `json:"token"`
+}
+
+type ErrResponse struct {
+	Error string `json:"error"`
 }
