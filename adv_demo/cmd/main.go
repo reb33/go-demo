@@ -9,6 +9,7 @@ import (
 	"adv_demo/internal/link"
 	"adv_demo/internal/user"
 	"adv_demo/pkg/db"
+	"adv_demo/pkg/jwt"
 	"adv_demo/pkg/middleware"
 )
 
@@ -21,8 +22,11 @@ func main() {
 	linkRepository := link.NewLinkRepository(db)
 	userRepository := user.NewUserRepository(db)
 
+	// JWT
+	jwt := jwt.NewJWT(conf.Auth.Secret)
+
 	// Services
-	authService := auth.NewAuthService(userRepository)
+	authService := auth.NewAuthService(userRepository, jwt)
 
 	// Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{

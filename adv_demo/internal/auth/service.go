@@ -2,17 +2,20 @@ package auth
 
 import (
 	"adv_demo/internal/user"
+	"adv_demo/pkg/jwt"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
 	UserRepo *user.UserRepository
+	JWT      *jwt.JWT
 }
 
-func NewAuthService(userRepo *user.UserRepository) *AuthService {
+func NewAuthService(userRepo *user.UserRepository, jwt *jwt.JWT) *AuthService {
 	return &AuthService{
 		UserRepo: userRepo,
+		JWT:      jwt,
 	}
 }
 
@@ -36,7 +39,11 @@ func (s *AuthService) Register(email, password, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return user.Email, nil
+	signedString, err := s.JWT.Create(email)
+	if err != nil {
+		return "", err
+	}
+	return signedString, nil
 }
 
 func (s *AuthService) Login(email, password string) (string, error) {
@@ -49,8 +56,11 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	}
 	err := bcrypt.CompareHashAndPassword([]byte(userDB.Password), []byte(password))
 	if err != nil {
-    	return "", ErrInvalidCredentials
-	} else {
-		return email, nil
+		return "", ErrInvalidCredentials
+	} 
+	signedString, err := s.JWT.Create(email)
+	if err != nil {
+		return "", err
 	}
+	return signedString, nil
 }

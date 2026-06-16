@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 			Dsn: os.Getenv("DSN"),
 		},
 		Auth: configs.AuthConfig{
-			Secret: os.Getenv("TOKEN"),
+			Secret: "",
 		},
 	}
 	db := db.NewDb(conf)
