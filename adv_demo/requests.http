@@ -1,0 +1,50 @@
+GET /hello HTTP/2.0
+Host: localhost:8081
+###
+
+# @name login
+POST http://localhost:8081/auth/login HTTP/2.0
+
+{
+    "email": "aa@a.ru",
+    "password": "123"
+}
+###
+
+# @name register
+POST http://localhost:8081/auth/register HTTP/2.0
+
+{
+    "name": "whois",
+    "email": "aaa@a.ru",
+    "password": "123"
+}
+
+###
+
+# @name link/create
+POST http://localhost:8081/link HTTP/1.1
+
+{
+    "url": "https://purpleschool.ru"
+}
+
+###
+
+GET http://localhost:8081/vbfeYM HTTP/2.0
+Authorization: Bearer GHJHDLHLHDCLKWHKHJLFEH
+
+###
+
+# @name link/update
+PATCH http://localhost:8081/link/3 HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFhQGEucnUifQ.P44M7BWRqVczNgH2zTB7gVUSCYug9OdHs6OaFjx-SXk
+
+{
+    "url": "https://ya.ru"
+}
+
+###
+
+# @name link/delete
+DELETE  http://localhost:8081/link/10 HTTP/1.1

@@ -39,7 +39,9 @@ func (s *AuthService) Register(email, password, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	signedString, err := s.JWT.Create(email)
+	signedString, err := s.JWT.Create(jwt.JWTData{
+		Email: email,
+	})
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +60,7 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", ErrInvalidCredentials
 	} 
-	signedString, err := s.JWT.Create(email)
+	signedString, err := s.JWT.Create(jwt.JWTData{Email: email})
 	if err != nil {
 		return "", err
 	}
