@@ -6,6 +6,7 @@ import (
 	"adv_demo/pkg/request"
 	"adv_demo/pkg/response"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -93,6 +94,11 @@ func (handler *LinkHandler) UpdateLink() http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+		if userEmail, ok := r.Context().Value(middleware.ContextEmailKey).(string); ok {
+			log.Println(userEmail)
+		} else {
+			log.Println("No email")
 		}
 		response.Json(w, http.StatusOK, link)
 	}
