@@ -2,6 +2,7 @@ package main
 
 import (
 	"adv_demo/internal/link"
+	"adv_demo/internal/stat"
 	"adv_demo/internal/user"
 	"os"
 
@@ -19,5 +20,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{}, &user.UserDB{})
+	db.AutoMigrate(&link.Link{}, &user.UserDB{}, &stat.StatDB{})
 }
