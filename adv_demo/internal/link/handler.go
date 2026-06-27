@@ -28,6 +28,7 @@ func NewLinkHandler(router *http.ServeMux, deps *LinkHandlerDeps) {
 	router.HandleFunc("POST /link", handler.CreateLink())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.UpdateLink(), deps.Config))
 	router.HandleFunc("DELETE /link/{id}", handler.DeleteLink())
+	router.Handle("GET /links", middleware.IsAuthed(handler.GetAll(), deps.Config))
 }
 
 func (handler *LinkHandler) GoTo() http.HandlerFunc {
@@ -122,5 +123,30 @@ func (handler *LinkHandler) DeleteLink() http.HandlerFunc {
 			return
 		}
 		response.Json(w, http.StatusOK, link)
+	}
+}
+
+func (handler *LinkHandler) GetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		links := handler.LinkRepository.GetAll(limit, offset)
+		if links == nil {
+			http.Error(w, "Links not found", http.StatusNotFound)
+			return
+		}
+		count := handler.LinkRepository.Count()
+		response.Json(w, http.StatusOK, GetAllLinksResponse{
+			Links: links,
+			Count: count,
+		})
 	}
 }

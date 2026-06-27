@@ -29,7 +29,7 @@ POST http://localhost:8081/link HTTP/1.1
     "url": "https://purpleschool.ru"
 }
 
-###
+### 
 
 GET http://localhost:8081/vbfeYM HTTP/2.0
 Authorization: Bearer GHJHDLHLHDCLKWHKHJLFEH
@@ -48,3 +48,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFhQGEuc
 
 # @name link/delete
 DELETE  http://localhost:8081/link/10 HTTP/1.1
+
+###
+
+# получение ссылок
+GET http://localhost:8081/links
+    ?limit=5
+    &offset=0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFhQGEucnUifQ.P44M7BWRqVczNgH2zTB7gVUSCYug9OdHs6OaFjx-SXk
+
+
