@@ -2,6 +2,7 @@ package link
 
 import (
 	"adv_demo/configs"
+	"adv_demo/pkg/di"
 	"adv_demo/pkg/middleware"
 	"adv_demo/pkg/request"
 	"adv_demo/pkg/response"
@@ -13,16 +14,19 @@ import (
 
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
+	StatRepository di.IStatRepository
 	Config         *configs.Config
 }
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	StatRepository di.IStatRepository
 }
 
 func NewLinkHandler(router *http.ServeMux, deps *LinkHandlerDeps) {
 	handler := LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		StatRepository: deps.StatRepository,
 	}
 	router.HandleFunc("GET /{hash}", handler.GoTo())
 	router.HandleFunc("POST /link", handler.CreateLink())
@@ -43,6 +47,7 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		handler.StatRepository.AddClick(link.ID)
 		http.Redirect(w, r, link.Url, http.StatusTemporaryRedirect)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"adv_demo/configs"
 	"adv_demo/internal/auth"
 	"adv_demo/internal/link"
+	"adv_demo/internal/stat"
 	"adv_demo/internal/user"
 	"adv_demo/pkg/db"
 	"adv_demo/pkg/jwt"
@@ -21,6 +22,7 @@ func main() {
 	// Repositories
 	linkRepository := link.NewLinkRepository(db)
 	userRepository := user.NewUserRepository(db)
+	statRepository := stat.NewStatRepository(db)
 
 	// JWT
 	jwt := jwt.NewJWT(conf.Auth.Secret)
@@ -35,6 +37,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, &link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		StatRepository: statRepository,
 		Config:         conf,
 	})
 
