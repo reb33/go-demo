@@ -35,7 +35,7 @@ func (r *StatRepository) AddClick(linkId uint) {
 	currentDate := datatypes.Date(time.Now())
 	result := r.Db.Find(&stat, "link_id = ? AND data = ?", linkId, currentDate)
 	if result.RowsAffected == 0 {
-		stat := StatDB{
+		stat = StatDB{
 			LinkId: linkId,
 			Clicks: 1,
 			Data:   currentDate,

@@ -10,6 +10,7 @@ import (
 	"adv_demo/internal/stat"
 	"adv_demo/internal/user"
 	"adv_demo/pkg/db"
+	"adv_demo/pkg/event"
 	"adv_demo/pkg/jwt"
 	"adv_demo/pkg/middleware"
 )
@@ -18,6 +19,7 @@ func main() {
 	conf := configs.LoadConfig()
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
+	eventBus := event.NewEventBus()
 
 	// Repositories
 	linkRepository := link.NewLinkRepository(db)
@@ -29,6 +31,10 @@ func main() {
 
 	// Services
 	authService := auth.NewAuthService(userRepository, jwt)
+	statService := stat.NewStatService(&stat.StatServiceDeps{
+		EventBus:       eventBus,
+		StatRepository: statRepository,
+	})
 
 	// Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
@@ -37,8 +43,8 @@ func main() {
 	})
 	link.NewLinkHandler(router, &link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
-		StatRepository: statRepository,
 		Config:         conf,
+		EventBus:       eventBus,
 	})
 
 	// Middlewares
@@ -51,6 +57,8 @@ func main() {
 		Addr:    ":8081",
 		Handler: stack(router),
 	}
+
+	go statService.AddClick()
 
 	fmt.Println("Server is listening on port 8081")
 	server.ListenAndServe()
