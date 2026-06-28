@@ -104,7 +104,6 @@ func (repo *LinkRepository) GetAll(limit, offset int) []Link {
 
 	repo.Database.
 		Table("links").
-		Select("id, url, hash, created_at, updated_at").
 		Where("deleted_at is null").
 		Order("id asc").
 		Limit(limit).
